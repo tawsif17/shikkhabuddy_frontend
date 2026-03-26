@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { PageShell } from "@/components/page-shell"
@@ -12,6 +12,14 @@ import { formatApiError } from "@/lib/api/client"
 type VerifyStatus = "idle" | "loading" | "success" | "error" | "empty"
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<PageShell><div className="min-h-[calc(100vh-8rem)]" /></PageShell>}>
+      <VerifyEmailPageContent />
+    </Suspense>
+  )
+}
+
+function VerifyEmailPageContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const hasAttempted = useRef(false)

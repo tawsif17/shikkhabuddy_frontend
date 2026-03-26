@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { Suspense, useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { PageShell } from "@/components/page-shell"
@@ -14,6 +14,14 @@ import { formatApiError } from "@/lib/api/client"
 type SubmitStatus = "idle" | "loading" | "success" | "error"
 
 export default function ResendVerificationPage() {
+  return (
+    <Suspense fallback={<PageShell><div className="min-h-[calc(100vh-8rem)]" /></PageShell>}>
+      <ResendVerificationPageContent />
+    </Suspense>
+  )
+}
+
+function ResendVerificationPageContent() {
   const searchParams = useSearchParams()
   const initialEmail = useMemo(() => searchParams.get("email") ?? "", [searchParams])
   const [email, setEmail] = useState(initialEmail)
