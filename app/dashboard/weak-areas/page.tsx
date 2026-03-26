@@ -1,45 +1,70 @@
-import { PageShell } from "@/components/page-shell"
+"use client"
+
+import { useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Breadcrumb } from "@/components/breadcrumb"
+import { PageShell } from "@/components/page-shell"
+import { ProgressDashboardPanels } from "@/components/progress-dashboard-panels"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Target } from "@/components/icons"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useProgressDashboard } from "@/lib/api/hooks"
+import { ApiClientError } from "@/lib/api/client"
+import { useAuth } from "@/lib/auth-context"
 
 export default function WeakAreaDashboardPage() {
-  // TODO: Backend does not currently provide weak areas analytics endpoint
-  // This feature will be enabled once the backend supports:
-  // - GET /analytics/weak-areas or similar endpoint
-  
+  const router = useRouter()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { dashboard, isLoading, isError } = useProgressDashboard(isAuthenticated)
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login?next=%2Fdashboard%2Fweak-areas")
+    }
+  }, [authLoading, isAuthenticated, router])
+
+  const isUnauthorized = isError instanceof ApiClientError && isError.status === 401
+
   return (
     <PageShell>
-      {/* Header */}
-      <section className="bg-secondary/50 border-b border-border">
-        <div className="container mx-auto px-4 py-6 md:py-8">
+      <section className="border-b border-border bg-secondary/40">
+        <div className="container mx-auto px-4 py-10 md:py-12">
           <div className="mb-4">
-            <Breadcrumb
-              items={[
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "Weak Areas" },
-              ]}
-            />
+            <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Weak Areas" }]} />
           </div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Your Learning Focus</h1>
-          <p className="text-sm text-muted-foreground mt-1">Areas identified for targeted improvement</p>
+          <h1 className="text-3xl font-bold text-foreground md:text-4xl">Your learning focus</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            This view reuses the same contract-defined progress dashboard data and highlights only the ranked weak chapters.
+          </p>
         </div>
       </section>
 
-      {/* Coming Soon */}
-      <section className="container mx-auto px-4 py-12 md:py-16">
-        <Card className="max-w-md mx-auto border-border">
-          <CardContent className="p-8 text-center">
-            <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <Target className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">Coming Soon</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Weak area analysis will be available once you complete more practice sessions. 
-              Keep practicing to unlock personalized insights.
-            </p>
-          </CardContent>
-        </Card>
+      <section className="container mx-auto px-4 py-10 md:py-12">
+        {authLoading || isLoading ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Loading weak areas...</p>
+            <Skeleton className="h-24 rounded-3xl" />
+            <Skeleton className="h-64 rounded-3xl" />
+          </div>
+        ) : isUnauthorized ? (
+          <Card className="border-border">
+            <CardContent className="px-6 py-8 text-center">
+              <p className="text-sm text-muted-foreground">Authorization token missing or invalid</p>
+              <Button asChild className="mt-4">
+                <Link href="/login?next=%2Fdashboard%2Fweak-areas">Login to continue</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : isError ? (
+          <Card className="border-border">
+            <CardContent className="px-6 py-8 text-center">
+              <p className="text-destructive">Unable to load weak areas right now.</p>
+            </CardContent>
+          </Card>
+        ) : dashboard ? (
+          <ProgressDashboardPanels dashboard={dashboard} variant="weak-areas" />
+        ) : null}
       </section>
     </PageShell>
   )

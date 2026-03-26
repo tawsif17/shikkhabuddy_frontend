@@ -10,6 +10,8 @@ import { apiClient } from "./client"
 import {
   validateContactSubmitRequest,
   validateLoginRequest,
+  validateProgressDashboardRequest,
+  validateProgressDashboardResponse,
   validatePracticeGenerateRequest,
   validateQuestionsListRequest,
   validateRegisterRequest,
@@ -27,6 +29,7 @@ import type {
   LoginRequest,
   LoginResponse,
   McqOption,
+  ProgressDashboardResponse,
   PracticeGenerateRequest,
   PracticeGenerateResponse,
   PracticeItem,
@@ -153,6 +156,18 @@ export async function getSubjects(examType?: string): Promise<Subject[]> {
 export async function getSubjectChapters(subjectId: number): Promise<Chapter[]> {
   const response = await apiClient<ChaptersResponse>(`/subjects/${subjectId}/chapters`)
   return response.chapters
+}
+
+// ============================================
+// ANALYTICS API
+// ============================================
+
+export async function getProgressDashboard(): Promise<ProgressDashboardResponse> {
+  validateProgressDashboardRequest()
+  const response = await apiClient<ProgressDashboardResponse>("/profile/progress-dashboard", {
+    requiresAuth: true,
+  })
+  return validateProgressDashboardResponse(response)
 }
 
 // ============================================

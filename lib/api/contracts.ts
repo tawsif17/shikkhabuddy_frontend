@@ -3,6 +3,7 @@ import { ApiClientError } from "./client"
 import type {
   ContactSubmitRequest,
   LoginRequest,
+  ProgressDashboardResponse,
   PracticeGenerateRequest,
   QuestionsListRequest,
   RegisterRequest,
@@ -89,6 +90,53 @@ const practiceGenerateRequestSchema = z
   })
   .strict()
 
+const progressDashboardResponseSchema = z
+  .object({
+    message: z.string().nullable(),
+    proficiency: z
+      .object({
+        score: z.number().int().min(0).max(100),
+        trend_vs_last_week: z.number().int().nullable(),
+      })
+      .strict()
+      .nullable(),
+    weakness_ranking: z.array(
+      z
+        .object({
+          subject_id: z.number().int(),
+          subject_name: z.string(),
+          chapter_id: z.number().int(),
+          chapter_name: z.string(),
+          accuracy: z.number().int().min(0).max(100),
+          questions_attempted: z.number().int().min(0),
+          message: z.string().nullable(),
+        })
+        .strict()
+    ),
+    recommendation: z
+      .object({
+        label: z.string(),
+        generate_payload: z
+          .object({
+            exam_type_id: z.number().int(),
+            subject_id: z.number().int(),
+            mode: z.literal("MCQ"),
+            mcq_count: z.number().int().min(1).optional(),
+            language: z.string().optional(),
+            selection: z
+              .object({
+                type: z.literal("CHAPTERS"),
+                chapter_ids: z.array(z.number().int()).min(1).optional(),
+              })
+              .strict(),
+          })
+          .strict(),
+      })
+      .strict()
+      .nullable(),
+  })
+  .strict()
+
 function zodMessage(error: z.ZodError): string {
   return error.issues[0]?.message ?? "Invalid request payload"
 }
@@ -153,6 +201,36 @@ export function validatePracticeGenerateRequest(
 
   if (parsed.data.selection.type === "CHAPTERS" && !parsed.data.selection.chapter_ids?.length) {
     throw new Error("selection.chapter_ids is required when selection.type is CHAPTERS")
+  }
+
+  return parsed.data
+}
+
+export function validateProgressDashboardRequest(
+  input: Record<string, never> = {}
+): Record<string, never> {
+  const parsed = z.object({}).strict().safeParse(input)
+  if (!parsed.success) {
+    throw new Error(zodMessage(parsed.error))
+  }
+  return parsed.data
+}
+
+export function validateProgressDashboardResponse(
+  input: ProgressDashboardResponse
+): ProgressDashboardResponse {
+  const parsed = progressDashboardResponseSchema.safeParse(input)
+  if (!parsed.success) {
+    throw new Error(zodMessage(parsed.error))
+  }
+
+  if (
+    parsed.data.recommendation?.generate_payload.selection.type === "CHAPTERS" &&
+    !parsed.data.recommendation.generate_payload.selection.chapter_ids?.length
+  ) {
+    throw new Error(
+      "recommendation.generate_payload.selection.chapter_ids is required when selection.type is CHAPTERS"
+    )
   }
 
   return parsed.data

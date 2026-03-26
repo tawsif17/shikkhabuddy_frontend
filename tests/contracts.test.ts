@@ -3,6 +3,8 @@ import {
   entitlementErrorMessages,
   matchEntitlementErrorByExactMessage,
   validateContactSubmitRequest,
+  validateProgressDashboardRequest,
+  validateProgressDashboardResponse,
   validatePracticeGenerateRequest,
   validateQuestionsListRequest,
 } from "../lib/api/contracts"
@@ -85,5 +87,65 @@ describe("contract request validators", () => {
         selection: { type: "CHAPTERS" },
       })
     ).toThrow("selection.chapter_ids is required when selection.type is CHAPTERS")
+  })
+
+  it("validates progress dashboard request and response contracts", () => {
+    expect(validateProgressDashboardRequest()).toEqual({})
+    expect(() => validateProgressDashboardRequest({ extra: "x" } as never)).toThrow()
+
+    const valid = validateProgressDashboardResponse({
+      message: null,
+      proficiency: {
+        score: 65,
+        trend_vs_last_week: 4,
+      },
+      weakness_ranking: [
+        {
+          subject_id: 1,
+          subject_name: "Higher Math",
+          chapter_id: 11,
+          chapter_name: "Vectors",
+          accuracy: 42,
+          questions_attempted: 12,
+          message: null,
+        },
+      ],
+      recommendation: {
+        label: "Recommended: 25 MCQs from Vectors",
+        generate_payload: {
+          exam_type_id: 1,
+          subject_id: 1,
+          mode: "MCQ",
+          mcq_count: 25,
+          selection: {
+            type: "CHAPTERS",
+            chapter_ids: [11],
+          },
+        },
+      },
+    })
+
+    expect(valid.recommendation?.generate_payload.selection.chapter_ids).toEqual([11])
+
+    expect(() =>
+      validateProgressDashboardResponse({
+        message: null,
+        proficiency: null,
+        weakness_ranking: [],
+        recommendation: {
+          label: "Bad payload",
+          generate_payload: {
+            exam_type_id: 1,
+            subject_id: 1,
+            mode: "MCQ",
+            selection: {
+              type: "CHAPTERS",
+            },
+          },
+        },
+      })
+    ).toThrow(
+      "recommendation.generate_payload.selection.chapter_ids is required when selection.type is CHAPTERS"
+    )
   })
 })

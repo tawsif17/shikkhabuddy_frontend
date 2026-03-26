@@ -153,6 +153,49 @@ export interface QuestionsListResponse {
 }
 
 // ============================================
+// ANALYTICS TYPES
+// ============================================
+
+export interface ProgressProficiency {
+  score: number
+  trend_vs_last_week: number | null
+}
+
+export interface WeaknessRankingItem {
+  subject_id: number
+  subject_name: string
+  chapter_id: number
+  chapter_name: string
+  accuracy: number
+  questions_attempted: number
+  message: string | null
+}
+
+export interface RecommendedPracticePayload {
+  exam_type_id: number
+  subject_id: number
+  mode: "MCQ"
+  mcq_count?: number
+  language?: string
+  selection: {
+    type: "CHAPTERS"
+    chapter_ids?: number[]
+  }
+}
+
+export interface DashboardRecommendation {
+  label: string
+  generate_payload: RecommendedPracticePayload
+}
+
+export interface ProgressDashboardResponse {
+  message: string | null
+  proficiency: ProgressProficiency | null
+  weakness_ranking: WeaknessRankingItem[]
+  recommendation: DashboardRecommendation | null
+}
+
+// ============================================
 // PRACTICE SESSION TYPES
 // ============================================
 

@@ -2,12 +2,14 @@
 
 import useSWR from "swr"
 import {
+  getProgressDashboard,
   getExamTypes,
   getQuestions,
   getSubjectChapters,
   getSubjects,
   type Chapter,
   type ExamType,
+  type ProgressDashboardResponse,
   type QuestionListItem,
   type QuestionsListRequest,
   type Subject,
@@ -28,6 +30,10 @@ async function chaptersFetcher([, subjectId]: [string, number]): Promise<Chapter
 async function questionsFetcher([, query]: [string, QuestionsListRequest]): Promise<QuestionListItem[]> {
   const response = await getQuestions(query)
   return response.questions
+}
+
+async function progressDashboardFetcher(): Promise<ProgressDashboardResponse> {
+  return getProgressDashboard()
 }
 
 export function useExamTypes() {
@@ -89,6 +95,26 @@ export function useQuestions(query: QuestionsListRequest | null, enabled: boolea
 
   return {
     questions: data,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+export function useProgressDashboard(enabled: boolean = true) {
+  const key = enabled ? "profile-progress-dashboard" : null
+  const { data, error, isLoading, mutate } = useSWR<ProgressDashboardResponse>(
+    key,
+    progressDashboardFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      dedupingInterval: 30 * 1000,
+    }
+  )
+
+  return {
+    dashboard: data,
     isLoading,
     isError: error,
     mutate,
