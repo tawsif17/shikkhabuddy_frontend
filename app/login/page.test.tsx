@@ -50,4 +50,17 @@ describe("login page", () => {
       )
     })
   })
+
+  it("shows demo credentials guidance", () => {
+    render(<LoginPage />)
+
+    expect(
+      screen.getByText(
+        /Email verification is unavailable in this demo version\. Use the following credentials to try it out\./
+      )
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Dummy free user email:/)).toBeInTheDocument()
+    expect(screen.getByText(/Dummy pro user email:/)).toBeInTheDocument()
+    expect(screen.getByText(/Password:/)).toBeInTheDocument()
+  })
 })

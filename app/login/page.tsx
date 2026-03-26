@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GraduationCap } from "@/components/icons"
+import { AuthDemoCredentials } from "@/components/auth-demo-credentials"
 import { useAuth } from "@/lib/auth-context"
 import { formatApiError } from "@/lib/api/client"
 import { isUnverifiedLoginError } from "@/lib/api"
@@ -86,6 +87,8 @@ function LoginPageContent() {
                   {error}
                 </div>
               )}
+
+              <AuthDemoCredentials />
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
